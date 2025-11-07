@@ -42,9 +42,8 @@ class TodoApp {
         const clearData = document.getElementById('clearData');
         const clearCompleted = document.getElementById('clearCompleted');
         const saveEditTask = document.getElementById('saveEditTask');
-        const undoBtn = document.getElementById('undoBtn');
-        const redoBtn = document.getElementById('redoBtn');
 
+        // Adicionar event listeners apenas para elementos que existem
         if (taskForm) {
             taskForm.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -52,13 +51,10 @@ class TodoApp {
             });
         }
 
-        if (taskStartDate) {
+        if (taskStartDate && taskEndDate) {
             taskStartDate.addEventListener('change', () => {
                 this.validateDates('taskStartDate', 'taskEndDate');
             });
-        }
-
-        if (taskEndDate) {
             taskEndDate.addEventListener('change', () => {
                 this.validateDates('taskStartDate', 'taskEndDate');
             });
@@ -96,18 +92,7 @@ class TodoApp {
             });
         }
 
-        if (undoBtn) {
-            undoBtn.addEventListener('click', () => {
-                this.undo();
-            });
-        }
-        
-        if (redoBtn) {
-            redoBtn.addEventListener('click', () => {
-                this.redo();
-            });
-        }
-        
+        // Adicionar atalhos de teclado para undo/redo (Ctrl+Z e Ctrl+Y)
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && !e.altKey) {
                 if (e.key === 'z' || e.key === 'Z') {
@@ -147,14 +132,15 @@ class TodoApp {
             'taskTitle': 100,
             'taskResponsible': 50,
             'taskDescription': 500,
-            'taskObservations': 300
+            'taskObservations': 300,
+            'editTaskTitle': 100,
+            'editTaskResponsible': 50,
+            'editTaskDescription': 500,
+            'editTaskObservations': 300
         };
         return maxLengths[inputId] || 255;
     }
 
-    // O restante da classe permanece igual...
-    // [Manter todos os outros métodos exatamente como estão]
-    
     saveState() {
         if (this.currentStateIndex < this.stateHistory.length - 1) {
             this.stateHistory = this.stateHistory.slice(0, this.currentStateIndex + 1);
@@ -220,11 +206,8 @@ class TodoApp {
     }
 
     updateUndoRedoButtons() {
-        const undoBtn = document.getElementById('undoBtn');
-        const redoBtn = document.getElementById('redoBtn');
-        
-        if (undoBtn) undoBtn.disabled = this.currentStateIndex <= 0;
-        if (redoBtn) redoBtn.disabled = this.currentStateIndex >= this.stateHistory.length - 1;
+        // Esta função é mantida para compatibilidade, mas os botões não existem no HTML
+        console.log('Estado atual:', this.currentStateIndex, 'Total de estados:', this.stateHistory.length);
     }
 
     addTask() {
@@ -359,7 +342,7 @@ class TodoApp {
             if (editTaskDescription) task.description = editTaskDescription.value.trim();
             if (editTaskObservations) task.observations = editTaskObservations.value.trim();
 
-            if (!task.title || !task.responsible || !task.startDate || !task.endDate) {
+            if (!task.title || !task.responsible || !task.startDate || !task.endDate || !task.priority) {
                 this.showAlert('Por favor, preencha todos os campos obrigatórios.', 'warning');
                 return;
             }
@@ -422,17 +405,17 @@ class TodoApp {
 
     createTaskCard(task) {
         const col = document.createElement('div');
-        col.className = 'col-md-6 col-lg-4';
+        col.className = 'col-md-6 col-lg-4 mb-3';
         
         const priorityClass = `priority-${task.priority}`;
         const statusClass = task.completed ? 'task-completed' : 'task-pending';
         
         col.innerHTML = `
-            <div class="card task-card ${statusClass} ${priorityClass}">
+            <div class="card task-card ${statusClass} ${priorityClass} h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <h6 class="card-title task-title ${task.completed ? 'completed-task' : ''}">${this.escapeHtml(task.title)}</h6>
-                        <span class="badge ${this.getPriorityBadgeClass(task.priority)} badge-priority">
+                        <span class="badge ${this.getPriorityBadgeClass(task.priority)}">
                             ${this.getPriorityText(task.priority)}
                         </span>
                     </div>
@@ -446,7 +429,7 @@ class TodoApp {
                         ${this.formatDate(task.startDate)} - ${this.formatDate(task.endDate)}
                     </p>
                     
-                    ${task.description ? `<p class="card-text mb-2">${this.escapeHtml(task.description)}</p>` : ''}
+                    ${task.description ? `<p class="card-text mb-2 small">${this.escapeHtml(task.description)}</p>` : ''}
                     
                     ${task.observations ? `
                         <div class="mb-2">
@@ -454,7 +437,7 @@ class TodoApp {
                         </div>
                     ` : ''}
                     
-                    <div class="task-actions">
+                    <div class="task-actions mt-auto">
                         ${!task.completed ? `
                             <button class="btn btn-sm btn-success btn-action complete-task" data-id="${task.id}" title="Marcar como concluída">
                                 <i class="bi bi-check-lg"></i>
@@ -499,6 +482,7 @@ class TodoApp {
     }
 
     escapeHtml(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
@@ -523,6 +507,7 @@ class TodoApp {
     }
 
     formatDate(dateString) {
+        if (!dateString) return 'Não definida';
         const date = new Date(dateString);
         return date.toLocaleDateString('pt-BR');
     }
@@ -543,6 +528,7 @@ class TodoApp {
     }
 
     showAlert(message, type) {
+        // Remover alertas existentes
         const existingAlerts = document.querySelectorAll('.alert.position-fixed');
         existingAlerts.forEach(alert => alert.remove());
         
@@ -559,6 +545,7 @@ class TodoApp {
         
         document.body.appendChild(alertDiv);
         
+        // Auto-remover após 3 segundos
         setTimeout(() => {
             if (alertDiv.parentNode) {
                 alertDiv.parentNode.removeChild(alertDiv);
@@ -605,6 +592,9 @@ class TodoApp {
             } catch (e) {
                 console.error('Erro ao carregar dados:', e);
                 this.showAlert('Erro ao carregar dados do localStorage. Os dados podem estar corrompidos.', 'danger');
+                // Inicializar com array vazio em caso de erro
+                this.tasks = [];
+                this.nextId = 1;
             }
         } else {
             this.showAlert('Nenhum dado encontrado no localStorage.', 'info');

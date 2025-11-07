@@ -19,6 +19,9 @@ class TodoApp {
     constructor() {
         this.tasks = [];
         this.nextId = 1;
+        this.stateHistory = [];
+        this.currentStateIndex = -1;
+        this.maxHistoryStates = 20;
         this.init();
     }
 
@@ -26,17 +29,15 @@ class TodoApp {
         this.loadFromLocalStorage();
         this.setupEventListeners();
         this.renderTasks();
+        this.saveState();
     }
 
-    // Configurar event listeners
     setupEventListeners() {
-        // Formulário de adição de tarefa
         document.getElementById('taskForm').addEventListener('submit', (e) => {
             e.preventDefault();
             this.addTask();
         });
 
-        // Validação de datas
         document.getElementById('taskStartDate').addEventListener('change', () => {
             this.validateDates('taskStartDate', 'taskEndDate');
         });
@@ -45,7 +46,6 @@ class TodoApp {
             this.validateDates('taskStartDate', 'taskEndDate');
         });
 
-        // Botões de controle de dados
         document.getElementById('saveData').addEventListener('click', () => {
             this.saveToLocalStorage();
         });
@@ -53,24 +53,147 @@ class TodoApp {
         document.getElementById('loadData').addEventListener('click', () => {
             this.loadFromLocalStorage();
             this.renderTasks();
+            this.saveState();
         });
 
         document.getElementById('clearData').addEventListener('click', () => {
             this.clearLocalStorage();
         });
 
-        // Botão para excluir tarefas concluídas
         document.getElementById('clearCompleted').addEventListener('click', () => {
             this.clearCompletedTasks();
         });
 
-        // Botão para salvar edição de tarefa
         document.getElementById('saveEditTask').addEventListener('click', () => {
             this.saveEditedTask();
         });
+
+        document.getElementById('undoBtn').addEventListener('click', () => {
+            this.undo();
+        });
+        
+        document.getElementById('redoBtn').addEventListener('click', () => {
+            this.redo();
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+                if (e.key === 'z' || e.key === 'Z') {
+                    e.preventDefault();
+                    this.undo();
+                } else if (e.key === 'y' || e.key === 'Y') {
+                    e.preventDefault();
+                    this.redo();
+                }
+            }
+        });
+
+        this.setupInputValidation();
     }
 
-    // Adicionar uma nova tarefa
+    setupInputValidation() {
+        const titleInput = document.getElementById('taskTitle');
+        const responsibleInput = document.getElementById('taskResponsible');
+        const descriptionInput = document.getElementById('taskDescription');
+        const observationsInput = document.getElementById('taskObservations');
+
+        titleInput.addEventListener('input', () => {
+            if (titleInput.value.length > 100) {
+                titleInput.value = titleInput.value.substring(0, 100);
+            }
+        });
+
+        responsibleInput.addEventListener('input', () => {
+            if (responsibleInput.value.length > 50) {
+                responsibleInput.value = responsibleInput.value.substring(0, 50);
+            }
+        });
+
+        descriptionInput.addEventListener('input', () => {
+            if (descriptionInput.value.length > 500) {
+                descriptionInput.value = descriptionInput.value.substring(0, 500);
+            }
+        });
+
+        observationsInput.addEventListener('input', () => {
+            if (observationsInput.value.length > 300) {
+                observationsInput.value = observationsInput.value.substring(0, 300);
+            }
+        });
+    }
+
+    saveState() {
+        if (this.currentStateIndex < this.stateHistory.length - 1) {
+            this.stateHistory = this.stateHistory.slice(0, this.currentStateIndex + 1);
+        }
+        
+        const currentState = {
+            tasks: JSON.parse(JSON.stringify(this.tasks)),
+            nextId: this.nextId,
+            timestamp: new Date().toISOString()
+        };
+        
+        this.stateHistory.push(currentState);
+        this.currentStateIndex = this.stateHistory.length - 1;
+        
+        if (this.stateHistory.length > this.maxHistoryStates) {
+            this.stateHistory.shift();
+            this.currentStateIndex--;
+        }
+        
+        this.updateUndoRedoButtons();
+    }
+
+    undo() {
+        if (this.currentStateIndex > 0) {
+            this.currentStateIndex--;
+            this.loadState(this.currentStateIndex);
+            this.showAlert('Ação desfeita!', 'info');
+        } else {
+            this.showAlert('Não há mais ações para desfazer.', 'warning');
+        }
+    }
+
+    redo() {
+        if (this.currentStateIndex < this.stateHistory.length - 1) {
+            this.currentStateIndex++;
+            this.loadState(this.currentStateIndex);
+            this.showAlert('Ação refeita!', 'info');
+        } else {
+            this.showAlert('Não há mais ações para refazer.', 'warning');
+        }
+    }
+
+    loadState(index) {
+        const state = this.stateHistory[index];
+        if (state) {
+            this.tasks = state.tasks.map(task => {
+                return new Task(
+                    task.id,
+                    task.title,
+                    task.responsible,
+                    task.startDate,
+                    task.endDate,
+                    task.priority,
+                    task.description || '',
+                    task.observations || '',
+                    task.completed || false
+                );
+            });
+            this.nextId = state.nextId || this.tasks.length + 1;
+            this.renderTasks();
+            this.updateUndoRedoButtons();
+        }
+    }
+
+    updateUndoRedoButtons() {
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        
+        if (undoBtn) undoBtn.disabled = this.currentStateIndex <= 0;
+        if (redoBtn) redoBtn.disabled = this.currentStateIndex >= this.stateHistory.length - 1;
+    }
+
     addTask() {
         const title = document.getElementById('taskTitle').value.trim();
         const responsible = document.getElementById('taskResponsible').value.trim();
@@ -80,19 +203,18 @@ class TodoApp {
         const description = document.getElementById('taskDescription').value.trim();
         const observations = document.getElementById('taskObservations').value.trim();
 
-        // Validação básica
         if (!title || !responsible || !startDate || !endDate || !priority) {
             this.showAlert('Por favor, preencha todos os campos obrigatórios.', 'warning');
             return;
         }
 
-        // Verificar se a data de término é posterior à data de início
         if (new Date(endDate) < new Date(startDate)) {
             this.showAlert('A data de término deve ser posterior à data de início.', 'warning');
             return;
         }
 
-        // Criar nova tarefa
+        this.saveState();
+
         const task = new Task(
             this.nextId++,
             title,
@@ -110,26 +232,25 @@ class TodoApp {
         this.showAlert('Tarefa adicionada com sucesso!', 'success');
     }
 
-    // Marcar tarefa como concluída
     markTaskAsCompleted(taskId) {
         const task = this.tasks.find(t => t.id === taskId);
         if (task) {
+            this.saveState();
             task.completed = true;
             this.renderTasks();
             this.showAlert('Tarefa marcada como concluída!', 'success');
         }
     }
 
-    // Excluir tarefa
     deleteTask(taskId) {
         if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
+            this.saveState();
             this.tasks = this.tasks.filter(t => t.id !== taskId);
             this.renderTasks();
             this.showAlert('Tarefa excluída com sucesso!', 'success');
         }
     }
 
-    // Abrir modal para editar tarefa
     editTask(taskId) {
         const task = this.tasks.find(t => t.id === taskId);
         if (task) {
@@ -147,12 +268,13 @@ class TodoApp {
         }
     }
 
-    // Salvar tarefa editada
     saveEditedTask() {
         const taskId = parseInt(document.getElementById('editTaskId').value);
         const task = this.tasks.find(t => t.id === taskId);
         
         if (task) {
+            this.saveState();
+            
             task.title = document.getElementById('editTaskTitle').value.trim();
             task.responsible = document.getElementById('editTaskResponsible').value.trim();
             task.startDate = document.getElementById('editTaskStartDate').value;
@@ -161,7 +283,6 @@ class TodoApp {
             task.description = document.getElementById('editTaskDescription').value.trim();
             task.observations = document.getElementById('editTaskObservations').value.trim();
 
-            // Validação
             if (!task.title || !task.responsible || !task.startDate || !task.endDate) {
                 this.showAlert('Por favor, preencha todos os campos obrigatórios.', 'warning');
                 return;
@@ -179,50 +300,42 @@ class TodoApp {
         }
     }
 
-    // Excluir todas as tarefas concluídas
     clearCompletedTasks() {
         if (confirm('Tem certeza que deseja excluir todas as tarefas concluídas? Esta ação não pode ser desfeita.')) {
+            this.saveState();
             this.tasks = this.tasks.filter(t => !t.completed);
             this.renderTasks();
             this.showAlert('Todas as tarefas concluídas foram excluídas.', 'success');
         }
     }
 
-    // Renderizar as tarefas na interface
     renderTasks() {
         const pendingTasksContainer = document.getElementById('pendingTasks');
         const completedTasksContainer = document.getElementById('completedTasks');
         const emptyPending = document.getElementById('emptyPending');
         const emptyCompleted = document.getElementById('emptyCompleted');
         
-        // Limpar containers
         pendingTasksContainer.innerHTML = '';
         completedTasksContainer.innerHTML = '';
         
-        // Filtrar tarefas
         const pendingTasks = this.tasks.filter(task => !task.completed);
         const completedTasks = this.tasks.filter(task => task.completed);
         
-        // Atualizar contadores
         document.getElementById('pendingCount').textContent = pendingTasks.length;
         document.getElementById('completedCount').textContent = completedTasks.length;
         
-        // Mostrar/ocultar estados vazios
         emptyPending.style.display = pendingTasks.length === 0 ? 'block' : 'none';
         emptyCompleted.style.display = completedTasks.length === 0 ? 'block' : 'none';
         
-        // Renderizar tarefas pendentes
         pendingTasks.forEach(task => {
             pendingTasksContainer.appendChild(this.createTaskCard(task));
         });
         
-        // Renderizar tarefas concluídas
         completedTasks.forEach(task => {
             completedTasksContainer.appendChild(this.createTaskCard(task));
         });
     }
 
-    // Criar cartão de tarefa
     createTaskCard(task) {
         const col = document.createElement('div');
         col.className = 'col-md-6 col-lg-4';
@@ -234,14 +347,14 @@ class TodoApp {
             <div class="card task-card ${statusClass} ${priorityClass}">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h6 class="card-title task-title ${task.completed ? 'completed-task' : ''}">${task.title}</h6>
+                        <h6 class="card-title task-title ${task.completed ? 'completed-task' : ''}">${this.escapeHtml(task.title)}</h6>
                         <span class="badge ${this.getPriorityBadgeClass(task.priority)} badge-priority">
                             ${this.getPriorityText(task.priority)}
                         </span>
                     </div>
                     
                     <p class="card-text task-details mb-2">
-                        <i class="bi bi-person me-1"></i>${task.responsible}
+                        <i class="bi bi-person me-1"></i>${this.escapeHtml(task.responsible)}
                     </p>
                     
                     <p class="card-text task-details mb-2">
@@ -249,24 +362,24 @@ class TodoApp {
                         ${this.formatDate(task.startDate)} - ${this.formatDate(task.endDate)}
                     </p>
                     
-                    ${task.description ? `<p class="card-text mb-2">${task.description}</p>` : ''}
+                    ${task.description ? `<p class="card-text mb-2">${this.escapeHtml(task.description)}</p>` : ''}
                     
                     ${task.observations ? `
                         <div class="mb-2">
-                            <small class="text-muted"><strong>Observações:</strong> ${task.observations}</small>
+                            <small class="text-muted"><strong>Observações:</strong> ${this.escapeHtml(task.observations)}</small>
                         </div>
                     ` : ''}
                     
                     <div class="task-actions">
                         ${!task.completed ? `
-                            <button class="btn btn-sm btn-success btn-action complete-task" data-id="${task.id}">
+                            <button class="btn btn-sm btn-success btn-action complete-task" data-id="${task.id}" title="Marcar como concluída">
                                 <i class="bi bi-check-lg"></i>
                             </button>
-                            <button class="btn btn-sm btn-primary btn-action edit-task" data-id="${task.id}">
+                            <button class="btn btn-sm btn-primary btn-action edit-task" data-id="${task.id}" title="Editar tarefa">
                                 <i class="bi bi-pencil"></i>
                             </button>
                         ` : ''}
-                        <button class="btn btn-sm btn-danger btn-action delete-task" data-id="${task.id}">
+                        <button class="btn btn-sm btn-danger btn-action delete-task" data-id="${task.id}" title="Excluir tarefa">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -274,7 +387,6 @@ class TodoApp {
             </div>
         `;
         
-        // Adicionar event listeners aos botões
         if (!task.completed) {
             col.querySelector('.complete-task').addEventListener('click', () => {
                 this.markTaskAsCompleted(task.id);
@@ -292,7 +404,12 @@ class TodoApp {
         return col;
     }
 
-    // Obter classe do badge de prioridade
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     getPriorityBadgeClass(priority) {
         switch (priority) {
             case 'high': return 'bg-danger';
@@ -302,7 +419,6 @@ class TodoApp {
         }
     }
 
-    // Obter texto da prioridade
     getPriorityText(priority) {
         switch (priority) {
             case 'high': return 'Alta';
@@ -312,13 +428,11 @@ class TodoApp {
         }
     }
 
-    // Formatar data para exibição
     formatDate(dateString) {
         const date = new Date(dateString);
         return date.toLocaleDateString('pt-BR');
     }
 
-    // Validar datas
     validateDates(startDateId, endDateId) {
         const startDate = document.getElementById(startDateId).value;
         const endDate = document.getElementById(endDateId).value;
@@ -332,9 +446,10 @@ class TodoApp {
         }
     }
 
-    // Mostrar alerta
     showAlert(message, type) {
-        // Criar elemento de alerta
+        const existingAlerts = document.querySelectorAll('.alert.position-fixed');
+        existingAlerts.forEach(alert => alert.remove());
+        
         const alertDiv = document.createElement('div');
         alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
         alertDiv.style.top = '20px';
@@ -348,7 +463,6 @@ class TodoApp {
         
         document.body.appendChild(alertDiv);
         
-        // Remover alerta após 3 segundos
         setTimeout(() => {
             if (alertDiv.parentNode) {
                 alertDiv.parentNode.removeChild(alertDiv);
@@ -356,18 +470,21 @@ class TodoApp {
         }, 3000);
     }
 
-    // Salvar dados no localStorage
     saveToLocalStorage() {
         const data = {
             tasks: this.tasks,
             nextId: this.nextId
         };
         
-        localStorage.setItem('todoAppData', JSON.stringify(data));
-        this.showAlert('Dados salvos com sucesso no localStorage!', 'success');
+        try {
+            localStorage.setItem('todoAppData', JSON.stringify(data));
+            this.showAlert('Dados salvos com sucesso no localStorage!', 'success');
+        } catch (e) {
+            console.error('Erro ao salvar no localStorage:', e);
+            this.showAlert('Erro ao salvar dados no localStorage. O storage pode estar cheio.', 'danger');
+        }
     }
 
-    // Carregar dados do localStorage
     loadFromLocalStorage() {
         const data = localStorage.getItem('todoAppData');
         
@@ -375,7 +492,6 @@ class TodoApp {
             try {
                 const parsedData = JSON.parse(data);
                 this.tasks = parsedData.tasks.map(task => {
-                    // Garantir que todas as propriedades existam
                     return new Task(
                         task.id,
                         task.title,
@@ -392,26 +508,27 @@ class TodoApp {
                 this.showAlert('Dados recuperados com sucesso do localStorage!', 'success');
             } catch (e) {
                 console.error('Erro ao carregar dados:', e);
-                this.showAlert('Erro ao carregar dados do localStorage.', 'danger');
+                this.showAlert('Erro ao carregar dados do localStorage. Os dados podem estar corrompidos.', 'danger');
             }
         } else {
             this.showAlert('Nenhum dado encontrado no localStorage.', 'info');
         }
     }
 
-    // Limpar localStorage
     clearLocalStorage() {
         if (confirm('Tem certeza que deseja limpar todos os dados do localStorage? Esta ação não pode ser desfeita.')) {
             localStorage.removeItem('todoAppData');
             this.tasks = [];
             this.nextId = 1;
+            this.stateHistory = [];
+            this.currentStateIndex = -1;
             this.renderTasks();
+            this.saveState();
             this.showAlert('Dados do localStorage foram limpos com sucesso!', 'success');
         }
     }
 }
 
-// Inicializar a aplicação quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
     new TodoApp();
 });

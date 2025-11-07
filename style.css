@@ -1,4 +1,5 @@
 :root {
+    /* Variáveis de Cores */
     --primary-color: #4e73df;
     --secondary-color: #858796;
     --success-color: #1cc88a;
@@ -9,7 +10,7 @@
 }
 
 body {
-    background-color: #f8f9fc;
+    background-color: var(--light-color); /* Fundo claro padrão */
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -19,6 +20,7 @@ body {
     padding: 20px;
 }
 
+/* --- Estilos do Cabeçalho --- */
 .header {
     background: linear-gradient(135deg, var(--primary-color), #224abe);
     color: white;
@@ -28,13 +30,34 @@ body {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* --- Estilos das Seções e Controles (Formulário, Lista, Armazenamento) --- */
+.form-section,
+.task-list-section,
+.storage-controls {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.form-section,
+.task-list-section {
+    padding: 20px;
+}
+
+.storage-controls {
+    padding: 15px 20px; /* Padding vertical um pouco menor */
+}
+
+/* --- Estilos dos Cards de Tarefa --- */
 .task-card {
     border-radius: 10px;
-    border: none;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s, box-shadow 0.2s;
     margin-bottom: 15px;
     overflow: hidden;
+    background-color: white;
+    border: 1px solid #e3e6f0;
 }
 
 .task-card:hover {
@@ -42,6 +65,7 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* Bordas laterais para status (Pendentes/Concluídas) */
 .task-pending {
     border-left: 4px solid var(--primary-color);
 }
@@ -51,6 +75,7 @@ body {
     opacity: 0.8;
 }
 
+/* Bordas superiores para prioridade */
 .priority-high {
     border-top: 3px solid var(--danger-color);
 }
@@ -63,26 +88,7 @@ body {
     border-top: 3px solid var(--success-color);
 }
 
-.btn-action {
-    margin-right: 5px;
-}
-
-.form-section {
-    background-color: white;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-}
-
-.task-list-section {
-    background-color: white;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-}
-
+/* Estilos internos do Card */
 .task-title {
     font-weight: 600;
     font-size: 1.1rem;
@@ -93,10 +99,27 @@ body {
     font-size: 0.9rem;
 }
 
+.completed-task {
+    text-decoration: line-through;
+    color: var(--secondary-color);
+}
+
 .badge-priority {
     font-size: 0.75rem;
 }
 
+.task-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+/* --- Estilos de Navegação e Abas --- */
+.tab-content {
+    padding-top: 15px;
+}
+
+/* --- Estilos de Estado Vazio --- */
 .empty-state {
     text-align: center;
     padding: 40px 20px;
@@ -109,35 +132,14 @@ body {
     color: #d1d3e2;
 }
 
-.storage-controls {
-    background-color: white;
-    border-radius: 10px;
-    padding: 15px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-}
-
-.tab-content {
-    padding-top: 15px;
-}
-
-.completed-task {
-    text-decoration: line-through;
-    color: var(--secondary-color);
-}
-
-.task-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 10px;
-}
-
-/* Estilos para os botões desfazer/refazer */
+/* --- Estilos de Utilidade/Acessibilidade --- */
+/* Estilos para os botões desabilitados (Bootstrap) */
 .btn-outline-secondary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
+/* Estilo para tag kbd (atalhos de teclado) */
 kbd {
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;

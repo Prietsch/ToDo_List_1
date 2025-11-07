@@ -1,17 +1,25 @@
 :root {
-    /* Variáveis de Cores */
-    --primary-color: #4e73df;
-    --secondary-color: #858796;
-    --success-color: #1cc88a;
-    --danger-color: #e74a3b;
-    --warning-color: #f6c23e;
-    --light-color: #f8f9fc;
-    --dark-color: #5a5c69;
+    /* --- Variáveis de Cores Primárias --- */
+    --primary-color: #4e73df;    /* Azul Principal */
+    --secondary-color: #858796;  /* Cinza Secundário */
+    --success-color: #1cc88a;    /* Verde Sucesso */
+    --danger-color: #e74a3b;     /* Vermelho Perigo/Alta Prioridade */
+    --warning-color: #f6c23e;    /* Amarelo Aviso/Média Prioridade */
+    --light-color: #f8f9fc;      /* Fundo Claro */
+    --dark-color: #5a5c69;       /* Texto Escuro */
+    
+    /* Variável para Gradiente do Cabeçalho */
+    --header-gradient: linear-gradient(135deg, var(--primary-color), #224abe);
 }
 
+/* ------------------------------------------- */
+/* --- 1. ESTILOS BASE E ESTRUTURA --- */
+/* ------------------------------------------- */
+
 body {
-    background-color: var(--light-color); /* Fundo claro padrão */
+    background-color: var(--light-color);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--dark-color); /* Garante que o texto principal não seja preto puro */
 }
 
 .app-container {
@@ -20,17 +28,18 @@ body {
     padding: 20px;
 }
 
-/* --- Estilos do Cabeçalho --- */
+/* --- Cabeçalho --- */
 .header {
-    background: linear-gradient(135deg, var(--primary-color), #224abe);
+    background: var(--header-gradient); /* Usando a nova variável de gradiente */
     color: white;
     border-radius: 10px;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Sombra um pouco mais forte */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* --- Estilos das Seções e Controles (Formulário, Lista, Armazenamento) --- */
+/* --- Seções de Conteúdo (Formulário, Lista, Controles) --- */
 .form-section,
 .task-list-section,
 .storage-controls {
@@ -46,10 +55,53 @@ body {
 }
 
 .storage-controls {
-    padding: 15px 20px; /* Padding vertical um pouco menor */
+    padding: 15px 20px; 
 }
 
-/* --- Estilos dos Cards de Tarefa --- */
+/* ------------------------------------------- */
+/* --- 2. ESTILOS DE FORMULÁRIO E INTERAÇÃO --- */
+/* ------------------------------------------- */
+
+/* Transição suave para todos os botões Bootstrap */
+.btn {
+    transition: all 0.2s ease-in-out; 
+}
+
+/* Foco aprimorado para inputs e selects */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+}
+
+/* Estilo para a lista de abas (Tabs) */
+.nav-tabs .nav-link {
+    color: var(--secondary-color);
+    border: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.nav-tabs .nav-link:hover {
+    border-bottom-color: var(--primary-color);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--primary-color);
+    background-color: transparent; /* Garante que a aba ativa não tenha fundo cinza */
+    border-color: var(--primary-color) !important;
+    border-bottom: 3px solid var(--primary-color) !important;
+}
+
+.tab-content {
+    padding-top: 20px; /* Aumentei o padding para melhor separação visual das abas */
+}
+
+/* ------------------------------------------- */
+/* --- 3. ESTILOS DE CARDS E LISTA --- */
+/* ------------------------------------------- */
+
 .task-card {
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -62,17 +114,17 @@ body {
 
 .task-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Sombra maior no hover */
 }
 
-/* Bordas laterais para status (Pendentes/Concluídas) */
+/* Bordas laterais para status */
 .task-pending {
-    border-left: 4px solid var(--primary-color);
+    border-left: 5px solid var(--primary-color); /* Borda um pouco mais espessa */
 }
 
 .task-completed {
-    border-left: 4px solid var(--success-color);
-    opacity: 0.8;
+    border-left: 5px solid var(--success-color);
+    opacity: 0.75; /* Opacidade sutilmente reduzida */
 }
 
 /* Bordas superiores para prioridade */
@@ -88,10 +140,9 @@ body {
     border-top: 3px solid var(--success-color);
 }
 
-/* Estilos internos do Card */
 .task-title {
-    font-weight: 600;
-    font-size: 1.1rem;
+    font-weight: 700; /* Deixei mais negrito */
+    font-size: 1.15rem; /* Levemente maior */
 }
 
 .task-details {
@@ -106,6 +157,7 @@ body {
 
 .badge-priority {
     font-size: 0.75rem;
+    font-weight: 700;
 }
 
 .task-actions {
@@ -114,32 +166,30 @@ body {
     margin-top: 10px;
 }
 
-/* --- Estilos de Navegação e Abas --- */
-.tab-content {
-    padding-top: 15px;
-}
+/* ------------------------------------------- */
+/* --- 4. ESTILOS DE UTILIDADE E ESTADO VAZIO --- */
+/* ------------------------------------------- */
 
-/* --- Estilos de Estado Vazio --- */
 .empty-state {
     text-align: center;
-    padding: 40px 20px;
+    padding: 60px 20px; /* Padding maior */
     color: var(--secondary-color);
+    border: 1px dashed #d1d3e2;
+    border-radius: 8px;
+    margin-top: 10px;
 }
 
 .empty-state i {
-    font-size: 3rem;
-    margin-bottom: 15px;
+    font-size: 3.5rem; /* Ícone maior */
+    margin-bottom: 20px;
     color: #d1d3e2;
 }
 
-/* --- Estilos de Utilidade/Acessibilidade --- */
-/* Estilos para os botões desabilitados (Bootstrap) */
 .btn-outline-secondary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-/* Estilo para tag kbd (atalhos de teclado) */
 kbd {
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;

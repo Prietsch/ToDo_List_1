@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToDo List - Gerenciador de Tarefas de Eventos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Cabeçalho -->
+        <div class="header text-center">
+            <h1><i class="bi bi-calendar-event me-2"></i>Gerenciador de Tarefas de Eventos</h1>
+            <p class="mb-0">Organize todas as tarefas do seu evento em um só lugar</p>
+        </div>
+
+        <!-- Controles de Armazenamento -->
+        <div class="storage-controls">
+            <div class="row">
+                <div class="col-md-4">
+                    <button id="saveData" class="btn btn-success w-100">
+                        <i class="bi bi-save me-2"></i>Gravar Dados
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button id="loadData" class="btn btn-primary w-100">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Recuperar Dados
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button id="clearData" class="btn btn-danger w-100">
+                        <i class="bi bi-trash me-2"></i>Limpar Dados
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulário de Adição de Tarefas -->
+        <div class="form-section">
+            <h3><i class="bi bi-plus-circle me-2"></i>Adicionar Nova Tarefa</h3>
+            <form id="taskForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="taskTitle" class="form-label">Título da Tarefa *</label>
+                        <input type="text" class="form-control" id="taskTitle" required maxlength="100">
+                        <div class="form-text">Máximo 100 caracteres</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="taskResponsible" class="form-label">Responsável *</label>
+                        <input type="text" class="form-control" id="taskResponsible" required maxlength="50">
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="taskStartDate" class="form-label">Data de Início *</label>
+                        <input type="date" class="form-control" id="taskStartDate" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="taskEndDate" class="form-label">Data de Término *</label>
+                        <input type="date" class="form-control" id="taskEndDate" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="taskPriority" class="form-label">Prioridade *</label>
+                        <select class="form-select" id="taskPriority" required>
+                            <option value="">Selecione...</option>
+                            <option value="high">Alta</option>
+                            <option value="medium">Média</option>
+                            <option value="low">Baixa</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="taskDescription" class="form-label">Descrição</label>
+                    <textarea class="form-control" id="taskDescription" rows="3" maxlength="500"></textarea>
+                    <div class="form-text">Máximo 500 caracteres</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="taskObservations" class="form-label">Observações</label>
+                    <textarea class="form-control" id="taskObservations" rows="2" maxlength="300"></textarea>
+                    <div class="form-text">Máximo 300 caracteres</div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="reset" class="btn btn-secondary me-md-2">Limpar</button>
+                    <button type="submit" class="btn btn-primary">Adicionar Tarefa</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista de Tarefas -->
+        <div class="task-list-section">
+            <ul class="nav nav-tabs" id="taskTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+                        <i class="bi bi-clock me-1"></i>Tarefas Pendentes
+                        <span id="pendingCount" class="badge bg-primary ms-1">0</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab">
+                        <i class="bi bi-check-circle me-1"></i>Tarefas Concluídas
+                        <span id="completedCount" class="badge bg-success ms-1">0</span>
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="taskTabsContent">
+                <!-- Tarefas Pendentes -->
+                <div class="tab-pane fade show active" id="pending" role="tabpanel">
+                    <div id="pendingTasks" class="row">
+                        <!-- Tarefas pendentes serão inseridas aqui via JavaScript -->
+                    </div>
+                    
+                    <div id="emptyPending" class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h4>Nenhuma tarefa pendente</h4>
+                        <p>Adicione uma nova tarefa usando o formulário acima.</p>
+                    </div>
+                </div>
+                
+                <!-- Tarefas Concluídas -->
+                <div class="tab-pane fade" id="completed" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Tarefas Concluídas</h5>
+                        <button id="clearCompleted" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash me-1"></i>Excluir Todas as Concluídas
+                        </button>
+                    </div>
+                    
+                    <div id="completedTasks" class="row">
+                        <!-- Tarefas concluídas serão inseridas aqui via JavaScript -->
+                    </div>
+                    
+                    <div id="emptyCompleted" class="empty-state">
+                        <i class="bi bi-check2-circle"></i>
+                        <h4>Nenhuma tarefa concluída</h4>
+                        <p>Marque as tarefas como concluídas para vê-las aqui.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Edição de Tarefa -->
+    <div class="modal fade" id="editTaskModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Tarefa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editTaskForm">
+                        <input type="hidden" id="editTaskId">
+                        <div class="mb-3">
+                            <label for="editTaskTitle" class="form-label">Título da Tarefa</label>
+                            <input type="text" class="form-control" id="editTaskTitle" required maxlength="100">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskResponsible" class="form-label">Responsável</label>
+                            <input type="text" class="form-control" id="editTaskResponsible" required maxlength="50">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editTaskStartDate" class="form-label">Data de Início</label>
+                                <input type="date" class="form-control" id="editTaskStartDate" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editTaskEndDate" class="form-label">Data de Término</label>
+                                <input type="date" class="form-control" id="editTaskEndDate" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskPriority" class="form-label">Prioridade</label>
+                            <select class="form-select" id="editTaskPriority" required>
+                                <option value="high">Alta</option>
+                                <option value="medium">Média</option>
+                                <option value="low">Baixa</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskDescription" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="editTaskDescription" rows="3" maxlength="500"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskObservations" class="form-label">Observações</label>
+                            <textarea class="form-control" id="editTaskObservations" rows="2" maxlength="300"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveEditTask">Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

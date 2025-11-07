@@ -33,48 +33,80 @@ class TodoApp {
     }
 
     setupEventListeners() {
-        document.getElementById('taskForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.addTask();
-        });
+        // Verificar se os elementos existem antes de adicionar event listeners
+        const taskForm = document.getElementById('taskForm');
+        const taskStartDate = document.getElementById('taskStartDate');
+        const taskEndDate = document.getElementById('taskEndDate');
+        const saveData = document.getElementById('saveData');
+        const loadData = document.getElementById('loadData');
+        const clearData = document.getElementById('clearData');
+        const clearCompleted = document.getElementById('clearCompleted');
+        const saveEditTask = document.getElementById('saveEditTask');
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
 
-        document.getElementById('taskStartDate').addEventListener('change', () => {
-            this.validateDates('taskStartDate', 'taskEndDate');
-        });
+        if (taskForm) {
+            taskForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.addTask();
+            });
+        }
 
-        document.getElementById('taskEndDate').addEventListener('change', () => {
-            this.validateDates('taskStartDate', 'taskEndDate');
-        });
+        if (taskStartDate) {
+            taskStartDate.addEventListener('change', () => {
+                this.validateDates('taskStartDate', 'taskEndDate');
+            });
+        }
 
-        document.getElementById('saveData').addEventListener('click', () => {
-            this.saveToLocalStorage();
-        });
+        if (taskEndDate) {
+            taskEndDate.addEventListener('change', () => {
+                this.validateDates('taskStartDate', 'taskEndDate');
+            });
+        }
 
-        document.getElementById('loadData').addEventListener('click', () => {
-            this.loadFromLocalStorage();
-            this.renderTasks();
-            this.saveState();
-        });
+        if (saveData) {
+            saveData.addEventListener('click', () => {
+                this.saveToLocalStorage();
+            });
+        }
 
-        document.getElementById('clearData').addEventListener('click', () => {
-            this.clearLocalStorage();
-        });
+        if (loadData) {
+            loadData.addEventListener('click', () => {
+                this.loadFromLocalStorage();
+                this.renderTasks();
+                this.saveState();
+            });
+        }
 
-        document.getElementById('clearCompleted').addEventListener('click', () => {
-            this.clearCompletedTasks();
-        });
+        if (clearData) {
+            clearData.addEventListener('click', () => {
+                this.clearLocalStorage();
+            });
+        }
 
-        document.getElementById('saveEditTask').addEventListener('click', () => {
-            this.saveEditedTask();
-        });
+        if (clearCompleted) {
+            clearCompleted.addEventListener('click', () => {
+                this.clearCompletedTasks();
+            });
+        }
 
-        document.getElementById('undoBtn').addEventListener('click', () => {
-            this.undo();
-        });
+        if (saveEditTask) {
+            saveEditTask.addEventListener('click', () => {
+                this.saveEditedTask();
+            });
+        }
+
+        if (undoBtn) {
+            undoBtn.addEventListener('click', () => {
+                this.undo();
+            });
+        }
         
-        document.getElementById('redoBtn').addEventListener('click', () => {
-            this.redo();
-        });
+        if (redoBtn) {
+            redoBtn.addEventListener('click', () => {
+                this.redo();
+            });
+        }
         
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && !e.altKey) {
@@ -97,31 +129,32 @@ class TodoApp {
         const descriptionInput = document.getElementById('taskDescription');
         const observationsInput = document.getElementById('taskObservations');
 
-        titleInput.addEventListener('input', () => {
-            if (titleInput.value.length > 100) {
-                titleInput.value = titleInput.value.substring(0, 100);
-            }
-        });
-
-        responsibleInput.addEventListener('input', () => {
-            if (responsibleInput.value.length > 50) {
-                responsibleInput.value = responsibleInput.value.substring(0, 50);
-            }
-        });
-
-        descriptionInput.addEventListener('input', () => {
-            if (descriptionInput.value.length > 500) {
-                descriptionInput.value = descriptionInput.value.substring(0, 500);
-            }
-        });
-
-        observationsInput.addEventListener('input', () => {
-            if (observationsInput.value.length > 300) {
-                observationsInput.value = observationsInput.value.substring(0, 300);
+        // Adicionar event listeners apenas se os elementos existirem
+        [titleInput, responsibleInput, descriptionInput, observationsInput].forEach(input => {
+            if (input) {
+                input.addEventListener('input', () => {
+                    const maxLength = this.getMaxLengthForInput(input.id);
+                    if (input.value.length > maxLength) {
+                        input.value = input.value.substring(0, maxLength);
+                    }
+                });
             }
         });
     }
 
+    getMaxLengthForInput(inputId) {
+        const maxLengths = {
+            'taskTitle': 100,
+            'taskResponsible': 50,
+            'taskDescription': 500,
+            'taskObservations': 300
+        };
+        return maxLengths[inputId] || 255;
+    }
+
+    // O restante da classe permanece igual...
+    // [Manter todos os outros métodos exatamente como estão]
+    
     saveState() {
         if (this.currentStateIndex < this.stateHistory.length - 1) {
             this.stateHistory = this.stateHistory.slice(0, this.currentStateIndex + 1);
@@ -195,13 +228,27 @@ class TodoApp {
     }
 
     addTask() {
-        const title = document.getElementById('taskTitle').value.trim();
-        const responsible = document.getElementById('taskResponsible').value.trim();
-        const startDate = document.getElementById('taskStartDate').value;
-        const endDate = document.getElementById('taskEndDate').value;
-        const priority = document.getElementById('taskPriority').value;
-        const description = document.getElementById('taskDescription').value.trim();
-        const observations = document.getElementById('taskObservations').value.trim();
+        const titleInput = document.getElementById('taskTitle');
+        const responsibleInput = document.getElementById('taskResponsible');
+        const startDateInput = document.getElementById('taskStartDate');
+        const endDateInput = document.getElementById('taskEndDate');
+        const priorityInput = document.getElementById('taskPriority');
+        const descriptionInput = document.getElementById('taskDescription');
+        const observationsInput = document.getElementById('taskObservations');
+
+        // Verificar se os elementos existem
+        if (!titleInput || !responsibleInput || !startDateInput || !endDateInput || !priorityInput) {
+            this.showAlert('Erro: elementos do formulário não encontrados.', 'danger');
+            return;
+        }
+
+        const title = titleInput.value.trim();
+        const responsible = responsibleInput.value.trim();
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        const priority = priorityInput.value;
+        const description = descriptionInput ? descriptionInput.value.trim() : '';
+        const observations = observationsInput ? observationsInput.value.trim() : '';
 
         if (!title || !responsible || !startDate || !endDate || !priority) {
             this.showAlert('Por favor, preencha todos os campos obrigatórios.', 'warning');
@@ -228,7 +275,12 @@ class TodoApp {
 
         this.tasks.push(task);
         this.renderTasks();
-        document.getElementById('taskForm').reset();
+        
+        const taskForm = document.getElementById('taskForm');
+        if (taskForm) {
+            taskForm.reset();
+        }
+        
         this.showAlert('Tarefa adicionada com sucesso!', 'success');
     }
 
@@ -254,34 +306,58 @@ class TodoApp {
     editTask(taskId) {
         const task = this.tasks.find(t => t.id === taskId);
         if (task) {
-            document.getElementById('editTaskId').value = task.id;
-            document.getElementById('editTaskTitle').value = task.title;
-            document.getElementById('editTaskResponsible').value = task.responsible;
-            document.getElementById('editTaskStartDate').value = task.startDate;
-            document.getElementById('editTaskEndDate').value = task.endDate;
-            document.getElementById('editTaskPriority').value = task.priority;
-            document.getElementById('editTaskDescription').value = task.description;
-            document.getElementById('editTaskObservations').value = task.observations;
+            // Verificar se os elementos de edição existem
+            const editTaskId = document.getElementById('editTaskId');
+            const editTaskTitle = document.getElementById('editTaskTitle');
+            const editTaskResponsible = document.getElementById('editTaskResponsible');
+            const editTaskStartDate = document.getElementById('editTaskStartDate');
+            const editTaskEndDate = document.getElementById('editTaskEndDate');
+            const editTaskPriority = document.getElementById('editTaskPriority');
+            const editTaskDescription = document.getElementById('editTaskDescription');
+            const editTaskObservations = document.getElementById('editTaskObservations');
 
-            const modal = new bootstrap.Modal(document.getElementById('editTaskModal'));
-            modal.show();
+            if (editTaskId) editTaskId.value = task.id;
+            if (editTaskTitle) editTaskTitle.value = task.title;
+            if (editTaskResponsible) editTaskResponsible.value = task.responsible;
+            if (editTaskStartDate) editTaskStartDate.value = task.startDate;
+            if (editTaskEndDate) editTaskEndDate.value = task.endDate;
+            if (editTaskPriority) editTaskPriority.value = task.priority;
+            if (editTaskDescription) editTaskDescription.value = task.description;
+            if (editTaskObservations) editTaskObservations.value = task.observations;
+
+            const modalElement = document.getElementById('editTaskModal');
+            if (modalElement) {
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            }
         }
     }
 
     saveEditedTask() {
-        const taskId = parseInt(document.getElementById('editTaskId').value);
+        const taskIdInput = document.getElementById('editTaskId');
+        if (!taskIdInput) return;
+
+        const taskId = parseInt(taskIdInput.value);
         const task = this.tasks.find(t => t.id === taskId);
         
         if (task) {
             this.saveState();
             
-            task.title = document.getElementById('editTaskTitle').value.trim();
-            task.responsible = document.getElementById('editTaskResponsible').value.trim();
-            task.startDate = document.getElementById('editTaskStartDate').value;
-            task.endDate = document.getElementById('editTaskEndDate').value;
-            task.priority = document.getElementById('editTaskPriority').value;
-            task.description = document.getElementById('editTaskDescription').value.trim();
-            task.observations = document.getElementById('editTaskObservations').value.trim();
+            const editTaskTitle = document.getElementById('editTaskTitle');
+            const editTaskResponsible = document.getElementById('editTaskResponsible');
+            const editTaskStartDate = document.getElementById('editTaskStartDate');
+            const editTaskEndDate = document.getElementById('editTaskEndDate');
+            const editTaskPriority = document.getElementById('editTaskPriority');
+            const editTaskDescription = document.getElementById('editTaskDescription');
+            const editTaskObservations = document.getElementById('editTaskObservations');
+
+            if (editTaskTitle) task.title = editTaskTitle.value.trim();
+            if (editTaskResponsible) task.responsible = editTaskResponsible.value.trim();
+            if (editTaskStartDate) task.startDate = editTaskStartDate.value;
+            if (editTaskEndDate) task.endDate = editTaskEndDate.value;
+            if (editTaskPriority) task.priority = editTaskPriority.value;
+            if (editTaskDescription) task.description = editTaskDescription.value.trim();
+            if (editTaskObservations) task.observations = editTaskObservations.value.trim();
 
             if (!task.title || !task.responsible || !task.startDate || !task.endDate) {
                 this.showAlert('Por favor, preencha todos os campos obrigatórios.', 'warning');
@@ -294,8 +370,11 @@ class TodoApp {
             }
 
             this.renderTasks();
-            const modal = bootstrap.Modal.getInstance(document.getElementById('editTaskModal'));
-            modal.hide();
+            const modalElement = document.getElementById('editTaskModal');
+            if (modalElement) {
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) modal.hide();
+            }
             this.showAlert('Tarefa atualizada com sucesso!', 'success');
         }
     }
@@ -315,17 +394,22 @@ class TodoApp {
         const emptyPending = document.getElementById('emptyPending');
         const emptyCompleted = document.getElementById('emptyCompleted');
         
+        if (!pendingTasksContainer || !completedTasksContainer) return;
+        
         pendingTasksContainer.innerHTML = '';
         completedTasksContainer.innerHTML = '';
         
         const pendingTasks = this.tasks.filter(task => !task.completed);
         const completedTasks = this.tasks.filter(task => task.completed);
         
-        document.getElementById('pendingCount').textContent = pendingTasks.length;
-        document.getElementById('completedCount').textContent = completedTasks.length;
+        const pendingCount = document.getElementById('pendingCount');
+        const completedCount = document.getElementById('completedCount');
         
-        emptyPending.style.display = pendingTasks.length === 0 ? 'block' : 'none';
-        emptyCompleted.style.display = completedTasks.length === 0 ? 'block' : 'none';
+        if (pendingCount) pendingCount.textContent = pendingTasks.length;
+        if (completedCount) completedCount.textContent = completedTasks.length;
+        
+        if (emptyPending) emptyPending.style.display = pendingTasks.length === 0 ? 'block' : 'none';
+        if (emptyCompleted) emptyCompleted.style.display = completedTasks.length === 0 ? 'block' : 'none';
         
         pendingTasks.forEach(task => {
             pendingTasksContainer.appendChild(this.createTaskCard(task));
@@ -388,18 +472,28 @@ class TodoApp {
         `;
         
         if (!task.completed) {
-            col.querySelector('.complete-task').addEventListener('click', () => {
-                this.markTaskAsCompleted(task.id);
-            });
+            const completeBtn = col.querySelector('.complete-task');
+            const editBtn = col.querySelector('.edit-task');
             
-            col.querySelector('.edit-task').addEventListener('click', () => {
-                this.editTask(task.id);
-            });
+            if (completeBtn) {
+                completeBtn.addEventListener('click', () => {
+                    this.markTaskAsCompleted(task.id);
+                });
+            }
+            
+            if (editBtn) {
+                editBtn.addEventListener('click', () => {
+                    this.editTask(task.id);
+                });
+            }
         }
         
-        col.querySelector('.delete-task').addEventListener('click', () => {
-            this.deleteTask(task.id);
-        });
+        const deleteBtn = col.querySelector('.delete-task');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => {
+                this.deleteTask(task.id);
+            });
+        }
         
         return col;
     }
@@ -434,15 +528,17 @@ class TodoApp {
     }
 
     validateDates(startDateId, endDateId) {
-        const startDate = document.getElementById(startDateId).value;
-        const endDate = document.getElementById(endDateId).value;
+        const startDate = document.getElementById(startDateId);
+        const endDate = document.getElementById(endDateId);
         
-        if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
-            document.getElementById(endDateId).classList.add('is-invalid');
-            document.getElementById(startDateId).classList.add('is-invalid');
+        if (!startDate || !endDate) return;
+        
+        if (startDate.value && endDate.value && new Date(endDate.value) < new Date(startDate.value)) {
+            endDate.classList.add('is-invalid');
+            startDate.classList.add('is-invalid');
         } else {
-            document.getElementById(endDateId).classList.remove('is-invalid');
-            document.getElementById(startDateId).classList.remove('is-invalid');
+            endDate.classList.remove('is-invalid');
+            startDate.classList.remove('is-invalid');
         }
     }
 
@@ -529,6 +625,7 @@ class TodoApp {
     }
 }
 
+// Inicializar a aplicação quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
     new TodoApp();
 });
